@@ -1,1 +1,15 @@
 .DS_Store
+slides/~$*.pptx
+
+# Local Python environments
+.venv/
+data/.venv/
+
+# Generated experiment assets
+data/external/
+data/models/*
+!data/models/.gitkeep
+data/datasets/*
+!data/datasets/.gitkeep
+data/outputs/*
+!data/outputs/.gitkeep
