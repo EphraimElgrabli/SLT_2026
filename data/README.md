@@ -25,3 +25,18 @@ Then run the sanity check:
 ```
 
 The bootstrap clones the official repository at a pinned commit, creates a local virtual environment in `data/.venv`, installs upstream requirements, and downloads the small checkpoint used for an initial smoke test.
+
+## DA-2K Dataset Workflow
+
+Acquire and preprocess the first benchmark dataset:
+
+```bash
+./data/scripts/bootstrap_da2k_dataset.sh
+```
+
+This workflow:
+
+- downloads the official `DA-2K.zip` archive into `data/datasets/da2k/raw/`
+- extracts the dataset into `data/datasets/da2k/interim/`
+- validates the annotation file against the extracted images
+- writes processed manifests and summary statistics into `data/datasets/da2k/processed/`

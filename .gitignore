@@ -4,6 +4,7 @@ slides/~$*.pptx
 # Local Python environments
 .venv/
 data/.venv/
+__pycache__/
 
 # Generated experiment assets
 data/external/
