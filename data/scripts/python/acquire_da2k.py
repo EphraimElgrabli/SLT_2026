@@ -5,10 +5,12 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 
 from huggingface_hub import dataset_info, hf_hub_download
+
+from common import resolve_root_dir
 
 
 REPO_ID = "depth-anything/DA-2K"
@@ -24,7 +26,7 @@ class DatasetPaths:
 
 
 def resolve_paths() -> DatasetPaths:
-    root_dir = Path(__file__).resolve().parents[2]
+    root_dir = resolve_root_dir()
     dataset_root = root_dir / "data" / "datasets" / "da2k"
     raw_dir = dataset_root / "raw"
     return DatasetPaths(

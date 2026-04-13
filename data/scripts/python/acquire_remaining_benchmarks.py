@@ -5,9 +5,10 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
-import subprocess
 from dataclasses import asdict, dataclass
 from pathlib import Path
+
+from common import download_file, resolve_root_dir
 
 
 @dataclass(frozen=True)
@@ -96,7 +97,7 @@ def parse_args() -> argparse.Namespace:
         "--benchmarks",
         nargs="*",
         default=[benchmark.key for benchmark in BENCHMARKS],
-        help="Optional subset of benchmarks to download.",
+        help="Optional subset of benchmark keys to download.",
     )
     parser.add_argument(
         "--force",
@@ -104,10 +105,6 @@ def parse_args() -> argparse.Namespace:
         help="Force a fresh download even if a valid local file already exists.",
     )
     return parser.parse_args()
-
-
-def resolve_root_dir() -> Path:
-    return Path(__file__).resolve().parents[2]
 
 
 def selected_benchmarks(keys: list[str]) -> list[BenchmarkSpec]:
@@ -118,23 +115,9 @@ def selected_benchmarks(keys: list[str]) -> list[BenchmarkSpec]:
     return [registry[key] for key in keys]
 
 
-def download_asset(target_path: Path, asset: BenchmarkAsset, force: bool) -> dict:
-    target_path.parent.mkdir(parents=True, exist_ok=True)
-
+def ensure_free_disk_space(target_path: Path, expected_size_bytes: int) -> None:
     existing_size = target_path.stat().st_size if target_path.exists() else 0
-
-    if target_path.exists() and not force and existing_size == asset.expected_size_bytes:
-        return {
-            "path": str(target_path),
-            "size_bytes": existing_size,
-            "skipped": True,
-        }
-
-    if force and target_path.exists():
-        target_path.unlink()
-        existing_size = 0
-
-    remaining_bytes = asset.expected_size_bytes - existing_size
+    remaining_bytes = max(expected_size_bytes - existing_size, 0)
     free_bytes = shutil.disk_usage(target_path.parent).free
     required_bytes = remaining_bytes + MIN_FREE_SPACE_BUFFER_BYTES
     if free_bytes < required_bytes:
@@ -142,36 +125,19 @@ def download_asset(target_path: Path, asset: BenchmarkAsset, force: bool) -> dic
             f"Not enough free disk space for {target_path.name}: need at least {required_bytes} bytes, have {free_bytes} bytes."
         )
 
-    subprocess.run(
-        [
-            "curl",
-            "-L",
-            "--fail",
-            "--retry",
-            "3",
-            "-C",
-            "-",
-            "-o",
-            str(target_path),
-            asset.url,
-        ],
-        check=True,
+
+def download_asset(target_path: Path, asset: BenchmarkAsset, force: bool) -> dict[str, int | bool | str]:
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    ensure_free_disk_space(target_path, asset.expected_size_bytes)
+    return download_file(
+        asset.url,
+        target_path,
+        expected_size_bytes=asset.expected_size_bytes,
+        force=force,
     )
 
-    actual_size = target_path.stat().st_size
-    if actual_size != asset.expected_size_bytes:
-        raise RuntimeError(
-            f"Downloaded size mismatch for {target_path.name}: expected {asset.expected_size_bytes}, got {actual_size}"
-        )
 
-    return {
-        "path": str(target_path),
-        "size_bytes": actual_size,
-        "skipped": False,
-    }
-
-
-def write_metadata(dataset_root: Path, benchmark: BenchmarkSpec, results: list[dict]) -> None:
+def write_metadata(dataset_root: Path, benchmark: BenchmarkSpec, results: list[dict[str, int | bool | str]]) -> None:
     metadata = {
         "benchmark": benchmark.title,
         "key": benchmark.key,
@@ -192,20 +158,19 @@ def main() -> None:
     root_dir = resolve_root_dir()
     datasets_root = root_dir / "data" / "datasets"
 
-    summary: dict[str, dict] = {}
+    summary: dict[str, dict[str, int | str]] = {}
     for benchmark in selected_benchmarks(args.benchmarks):
         dataset_root = datasets_root / benchmark.key
         raw_dir = dataset_root / "raw"
         results = []
         for asset in benchmark.assets:
-            result = download_asset(raw_dir / asset.filename, asset, force=args.force)
-            results.append(result)
+            results.append(download_asset(raw_dir / asset.filename, asset, force=args.force))
 
         write_metadata(dataset_root, benchmark, results)
         summary[benchmark.key] = {
             "benchmark": benchmark.title,
             "asset_count": len(results),
-            "total_size_bytes": sum(result["size_bytes"] for result in results),
+            "total_size_bytes": sum(int(result["size_bytes"]) for result in results),
             "raw_dir": str(raw_dir),
         }
 

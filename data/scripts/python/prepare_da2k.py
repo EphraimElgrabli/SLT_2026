@@ -12,13 +12,11 @@ from zipfile import ZipFile
 
 from PIL import Image
 
+from common import resolve_root_dir
+
 
 ARCHIVE_NAME = "DA-2K.zip"
 DATASET_FOLDER_NAME = "DA-2K"
-
-
-def resolve_root_dir() -> Path:
-    return Path(__file__).resolve().parents[2]
 
 
 def build_paths(root_dir: Path) -> dict[str, Path]:
@@ -222,7 +220,7 @@ def main() -> None:
     archive_path = paths["archive_path"]
     if not archive_path.exists():
         raise FileNotFoundError(
-            f"Missing archive: {archive_path}. Run data/scripts/acquire_da2k.py before preprocessing."
+            f"Missing archive: {archive_path}. Run `python data/scripts/slt_data.py da2k` first."
         )
 
     if args.force:
