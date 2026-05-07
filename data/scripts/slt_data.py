@@ -94,6 +94,35 @@ def parse_args() -> argparse.Namespace:
         help="Re-download the small checkpoint during bootstrap.",
     )
 
+    evaluate_da2k_parser = subparsers.add_parser(
+        "evaluate-da2k",
+        help="Run the Depth Anything V2 student models on the DA-2K benchmark and write accuracy results.",
+    )
+    evaluate_da2k_parser.add_argument(
+        "--models",
+        nargs="+",
+        choices=["vits", "vitb", "vitl"],
+        default=None,
+        help="Encoders to evaluate (default: all three).",
+    )
+    evaluate_da2k_parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Evaluate only the first N images. Useful for quick sanity checks.",
+    )
+    evaluate_da2k_parser.add_argument(
+        "--input-size",
+        type=int,
+        default=None,
+        help="Inference resolution (default 518, matches the paper).",
+    )
+    evaluate_da2k_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Discard existing predictions for the selected models and re-run from scratch.",
+    )
+
     return parser.parse_args()
 
 
@@ -128,6 +157,19 @@ def main() -> None:
         extra_args = ["--force-checkpoint"] if args.force_checkpoint else []
         run_python_script("bootstrap_depth_anything_v2.py", *extra_args)
         run_python_script("run_depth_anything_v2_sanity_check.py")
+        return
+
+    if args.command == "evaluate-da2k":
+        workflow_args = []
+        if args.models:
+            workflow_args.extend(["--models", *args.models])
+        if args.limit is not None:
+            workflow_args.extend(["--limit", str(args.limit)])
+        if args.input_size is not None:
+            workflow_args.extend(["--input-size", str(args.input_size)])
+        if args.force:
+            workflow_args.append("--force")
+        run_python_script("evaluate_da2k.py", *workflow_args, use_venv=True)
         return
 
     raise ValueError(f"Unsupported command: {args.command}")

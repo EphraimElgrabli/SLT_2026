@@ -1,0 +1,10 @@
+DA-2K reproduction artifacts — SHA-256
+Generated: 2026-05-07 06:54 UTC
+
+715fade13be8f229f8a70cc02066f656f2423a59effd0579197bbf57860e1378  data/models/depth_anything_v2_vits.pth  (99218434 bytes)
+bef92f24284f3dcceb7b05fe6c3e00ad60cbe9860e45c9267b27baf71be6ea73  data/outputs/da2k/predictions/vits.jsonl  (509015 bytes)
+0d2b7002e62d39d655571c371333340bd88f67ab95050c03591555aa05645328  data/models/depth_anything_v2_vitb.pth  (389961218 bytes)
+b3b828bbb885ab2d8e4662c769195675d8efd241a89e726474e5c14ee82f67c7  data/outputs/da2k/predictions/vitb.jsonl  (507790 bytes)
+a7ea19fa0ed99244e67b624c72b8580b7e9553043245905be58796a608eb9345  data/models/depth_anything_v2_vitl.pth  (1341395338 bytes)
+ec77eab381dd53ee7c5ab06730d37728caa5a0393cd87cd1dc7c500663e27d3a  data/outputs/da2k/predictions/vitl.jsonl  (507253 bytes)
+990d3087c4037838b9c5f2a88a689417bfc1609dd1b21ce6cf4ebe6cb8c60705  data/outputs/da2k/summary.json  (3715 bytes)
