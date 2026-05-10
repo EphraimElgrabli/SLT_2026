@@ -15,7 +15,7 @@ from common import download_file, resolve_root_dir
 class BenchmarkAsset:
     filename: str
     url: str
-    expected_size_bytes: int
+    expected_size_bytes: int | None
 
 
 @dataclass(frozen=True)
@@ -56,6 +56,11 @@ BENCHMARKS: tuple[BenchmarkSpec, ...] = (
                 filename="MPI-Sintel-complete.zip",
                 url="https://files.is.tue.mpg.de/sintel/MPI-Sintel-complete.zip",
                 expected_size_bytes=5627783629,
+            ),
+            BenchmarkAsset(
+                filename="MPI-Sintel-depth-training-20150305.zip",
+                url="https://files.is.tue.mpg.de/jwulff/sintel/MPI-Sintel-depth-training-20150305.zip",
+                expected_size_bytes=None,
             ),
         ),
     ),
@@ -128,7 +133,8 @@ def ensure_free_disk_space(target_path: Path, expected_size_bytes: int) -> None:
 
 def download_asset(target_path: Path, asset: BenchmarkAsset, force: bool) -> dict[str, int | bool | str]:
     target_path.parent.mkdir(parents=True, exist_ok=True)
-    ensure_free_disk_space(target_path, asset.expected_size_bytes)
+    if asset.expected_size_bytes is not None:
+        ensure_free_disk_space(target_path, asset.expected_size_bytes)
     return download_file(
         asset.url,
         target_path,

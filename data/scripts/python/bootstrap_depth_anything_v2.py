@@ -87,6 +87,7 @@ def main() -> None:
     venv_python = resolve_venv_python(venv_dir)
     run_command([str(venv_python), "-m", "pip", "install", "--upgrade", "pip"])
     run_command([str(venv_python), "-m", "pip", "install", "-r", str(repo_dir / "requirements.txt")])
+    run_command([str(venv_python), "-m", "pip", "install", "h5py"])
 
     print()
     print(f"Downloading {len(CHECKPOINTS)} checkpoint(s): {', '.join(spec.key for spec in CHECKPOINTS)}")

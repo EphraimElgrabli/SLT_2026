@@ -45,12 +45,12 @@ def parse_args() -> argparse.Namespace:
 
     bootstrap_parser = subparsers.add_parser(
         "bootstrap",
-        help="Clone the pinned upstream repo, create the local venv, and fetch the small checkpoint.",
+        help="Clone the pinned upstream repo, create the local venv, and fetch the public student checkpoints.",
     )
     bootstrap_parser.add_argument(
         "--force-checkpoint",
         action="store_true",
-        help="Re-download the small checkpoint even if it already exists.",
+        help="Re-download the public student checkpoints even if they already exist.",
     )
 
     subparsers.add_parser(
@@ -91,7 +91,7 @@ def parse_args() -> argparse.Namespace:
     setup_parser.add_argument(
         "--force-checkpoint",
         action="store_true",
-        help="Re-download the small checkpoint during bootstrap.",
+        help="Re-download the public student checkpoints during bootstrap.",
     )
 
     evaluate_da2k_parser = subparsers.add_parser(
@@ -121,6 +121,37 @@ def parse_args() -> argparse.Namespace:
         "--force",
         action="store_true",
         help="Discard existing predictions for the selected models and re-run from scratch.",
+    )
+
+    metric_checkpoints_parser = subparsers.add_parser(
+        "metric-checkpoints",
+        help="Download the small indoor/outdoor metric-depth checkpoints used by benchmark evaluation.",
+    )
+    metric_checkpoints_parser.add_argument(
+        "--checkpoints",
+        nargs="*",
+        default=None,
+        help="Optional subset: hypersim_vits and/or vkitti_vits.",
+    )
+    metric_checkpoints_parser.add_argument("--force", action="store_true", help="Re-download checkpoint files.")
+
+    evaluate_metric_parser = subparsers.add_parser(
+        "evaluate-metric",
+        help="Run metric-depth evaluation on local KITTI, NYU, Sintel, DIODE, and ETH3D assets.",
+    )
+    evaluate_metric_parser.add_argument(
+        "--datasets",
+        nargs="+",
+        choices=["kitti", "nyu_depth_v2", "sintel", "eth3d", "diode"],
+        default=None,
+        help="Optional dataset subset to evaluate.",
+    )
+    evaluate_metric_parser.add_argument("--limit", type=int, default=None, help="Optional per-dataset sample limit.")
+    evaluate_metric_parser.add_argument("--input-size", type=int, default=None, help="Inference resolution.")
+    evaluate_metric_parser.add_argument(
+        "--median-align",
+        action="store_true",
+        help="Apply per-image median scaling before metric calculation.",
     )
 
     return parser.parse_args()
@@ -170,6 +201,28 @@ def main() -> None:
         if args.force:
             workflow_args.append("--force")
         run_python_script("evaluate_da2k.py", *workflow_args, use_venv=True)
+        return
+
+    if args.command == "metric-checkpoints":
+        workflow_args = []
+        if args.force:
+            workflow_args.append("--force")
+        if args.checkpoints:
+            workflow_args.extend(["--checkpoints", *args.checkpoints])
+        run_python_script("acquire_metric_checkpoints.py", *workflow_args)
+        return
+
+    if args.command == "evaluate-metric":
+        workflow_args = []
+        if args.datasets:
+            workflow_args.extend(["--datasets", *args.datasets])
+        if args.limit is not None:
+            workflow_args.extend(["--limit", str(args.limit)])
+        if args.input_size is not None:
+            workflow_args.extend(["--input-size", str(args.input_size)])
+        if args.median_align:
+            workflow_args.append("--median-align")
+        run_python_script("evaluate_metric_depth.py", *workflow_args, use_venv=True)
         return
 
     raise ValueError(f"Unsupported command: {args.command}")
