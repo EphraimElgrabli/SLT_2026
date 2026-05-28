@@ -123,6 +123,92 @@ def parse_args() -> argparse.Namespace:
         help="Discard existing predictions for the selected models and re-run from scratch.",
     )
 
+    prepare_diode_parser = subparsers.add_parser(
+        "prepare-diode",
+        help="Extract and validate the DIODE val benchmark, writing samples.jsonl.",
+    )
+    prepare_diode_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Re-extract and rebuild the processed manifest.",
+    )
+
+    prepare_sintel_parser = subparsers.add_parser(
+        "prepare-sintel",
+        help="Extract and validate the MPI-Sintel depth benchmark, writing samples.jsonl.",
+    )
+    prepare_sintel_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Re-extract and rebuild the processed manifest.",
+    )
+
+    prepare_eth3d_parser = subparsers.add_parser(
+        "prepare-eth3d",
+        help="Extract ETH3D and build dense GT depth maps by projecting scan PLYs onto DSLR images.",
+    )
+    prepare_eth3d_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Re-extract archives and recompute all depth maps from scratch.",
+    )
+
+    acquire_nyu_parser = subparsers.add_parser(
+        "acquire-nyu",
+        help="Download the NYU Depth V2 validation split (654-image test set) parquet shards.",
+    )
+    acquire_nyu_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Re-download even if local file sizes already match.",
+    )
+
+    prepare_nyu_parser = subparsers.add_parser(
+        "prepare-nyu",
+        help="Decode the NYU Depth V2 validation parquet into RGB+depth files and samples.jsonl.",
+    )
+    prepare_nyu_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Re-decode even if outputs already exist.",
+    )
+
+    acquire_kitti_parser = subparsers.add_parser(
+        "acquire-kitti",
+        help="Download KITTI Eigen-val raw drives + data_depth_annotated GT depth.",
+    )
+    acquire_kitti_parser.add_argument("--force", action="store_true", help="Re-download even if present.")
+    acquire_kitti_parser.add_argument("--skip-annotated", action="store_true", help="Skip the 13.3 GB GT zip.")
+    acquire_kitti_parser.add_argument("--skip-drives", action="store_true", help="Skip per-drive raw downloads.")
+
+    prepare_kitti_parser = subparsers.add_parser(
+        "prepare-kitti",
+        help="Extract KITTI image_02 + val GT depth and build samples.jsonl.",
+    )
+    prepare_kitti_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Re-extract everything and rebuild the manifest.",
+    )
+
+    eval_pw_parser = subparsers.add_parser(
+        "evaluate-pixelwise",
+        help="Affine-invariant relative-depth evaluation (Table 2).",
+    )
+    eval_pw_parser.add_argument("--benchmark", default="all",
+        choices=["nyu_depth_v2", "kitti", "sintel", "eth3d", "diode", "all"])
+    eval_pw_parser.add_argument("--models", nargs="+", default=None,
+        choices=["vits", "vitb", "vitl"])
+    eval_pw_parser.add_argument("--limit", type=int, default=None)
+    eval_pw_parser.add_argument("--threads", type=int, default=4)
+    eval_pw_parser.add_argument("--force", action="store_true")
+
+    report_pw_parser = subparsers.add_parser(
+        "build-pixelwise-report",
+        help="Generate the Table-2 reproduction Word report.",
+    )
+    report_pw_parser.add_argument("--output", default=None, help="Output .docx path.")
+
     metric_checkpoints_parser = subparsers.add_parser(
         "metric-checkpoints",
         help="Download the small indoor/outdoor metric-depth checkpoints used by benchmark evaluation.",
@@ -201,6 +287,63 @@ def main() -> None:
         if args.force:
             workflow_args.append("--force")
         run_python_script("evaluate_da2k.py", *workflow_args, use_venv=True)
+        return
+    
+    if args.command == "prepare-diode":
+        workflow_args = ["--force"] if args.force else []
+        run_python_script("prepare_diode.py", *workflow_args, use_venv=True)
+        return
+    
+    if args.command == "prepare-sintel":
+        workflow_args = ["--force"] if args.force else []
+        run_python_script("prepare_sintel.py", *workflow_args, use_venv=True)
+        return
+    
+    if args.command == "prepare-eth3d":
+        workflow_args = ["--force"] if args.force else []
+        run_python_script("prepare_eth3d.py", *workflow_args, use_venv=True)
+        return
+    
+    if args.command == "acquire-nyu":
+        workflow_args = ["--force"] if args.force else []
+        run_python_script("acquire_nyu.py", *workflow_args, use_venv=True)
+        return
+    
+    if args.command == "prepare-nyu":
+        workflow_args = ["--force"] if args.force else []
+        run_python_script("prepare_nyu.py", *workflow_args, use_venv=True)
+        return
+    
+    if args.command == "acquire-kitti":
+        workflow_args = []
+        if args.force:
+            workflow_args.append("--force")
+        if args.skip_annotated:
+            workflow_args.append("--skip-annotated")
+        if args.skip_drives:
+            workflow_args.append("--skip-drives")
+        run_python_script("acquire_kitti.py", *workflow_args, use_venv=True)
+        return
+    
+    if args.command == "prepare-kitti":
+        workflow_args = ["--force"] if args.force else []
+        run_python_script("prepare_kitti.py", *workflow_args, use_venv=True)
+        return
+    
+    if args.command == "evaluate-pixelwise":
+        workflow_args = ["--benchmark", args.benchmark, "--threads", str(args.threads)]
+        if args.models:
+            workflow_args += ["--models", *args.models]
+        if args.limit:
+            workflow_args += ["--limit", str(args.limit)]
+        if args.force:
+            workflow_args.append("--force")
+        run_python_script("evaluate_pixelwise.py", *workflow_args, use_venv=True)
+        return
+    
+    if args.command == "build-pixelwise-report":
+        workflow_args = ["--output", args.output] if args.output else []
+        run_python_script("build_pixelwise_report.py", *workflow_args, use_venv=True)
         return
 
     if args.command == "metric-checkpoints":

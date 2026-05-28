@@ -547,21 +547,6 @@ def build_report(summary: dict, env: dict[str, str], artifacts: dict, repo_commi
         "non-determinism between the original CUDA training/inference stack and our CPU stack."
     )
 
-    add_heading(doc, "Milestone status", level=2)
-    add_paragraph(
-        doc,
-        "This completes the DA-2K stage of the reproduction: the dataset was acquired and "
-        "preprocessed, all three public student checkpoints were evaluated, the results were "
-        "compared against the paper, and the generated artifacts were hashed for verification."
-    )
-    add_paragraph(
-        doc,
-        "KITTI and NYU Depth V2 have already been downloaded locally and are ready to seed the "
-        "next stage. They are not counted as completed evaluations in this report because they "
-        "require a separate metric-depth pipeline: benchmark-specific preprocessing, valid-mask "
-        "handling, crop/alignment rules, and metrics such as AbsRel, RMSE, and delta1."
-    )
-
     # ---- Section: Reproducibility ----
     add_heading(doc, "5. Reproducibility", level=1)
     add_paragraph(doc, "To regenerate the results in this report, run:")

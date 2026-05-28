@@ -1,5 +1,5 @@
 DA-2K reproduction artifacts — SHA-256
-Generated: 2026-05-07 06:54 UTC
+Generated: 2026-05-19 21:30 UTC
 
 715fade13be8f229f8a70cc02066f656f2423a59effd0579197bbf57860e1378  data/models/depth_anything_v2_vits.pth  (99218434 bytes)
 bef92f24284f3dcceb7b05fe6c3e00ad60cbe9860e45c9267b27baf71be6ea73  data/outputs/da2k/predictions/vits.jsonl  (509015 bytes)

@@ -14,3 +14,10 @@ data/datasets/*
 !data/datasets/.gitkeep
 data/outputs/*
 !data/outputs/.gitkeep
+
+# Node modules (installed via npm, should not be tracked)
+node_modules/
+
+# Word lock files
+~$*.docx
+~$*.doc
