@@ -61,4 +61,12 @@ This writes:
 - `reports/da2k_reproduction.docx`
 - `reports/da2k_artifact_hashes.txt`
 
+## Tests
+
+The fast unit tests cover command argument forwarding and do not require datasets or model checkpoints:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
 The current completed stage includes the DA-2K relative-depth reproduction and the metric-depth evaluator for KITTI, NYU Depth V2, Sintel, DIODE, and ETH3D. ETH3D is evaluated against sparse COLMAP observations from the DSLR calibration archive, not dense projected scan maps.

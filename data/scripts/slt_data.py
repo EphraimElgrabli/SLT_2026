@@ -37,6 +37,31 @@ def run_python_script(script_name: str, *script_args: str, use_venv: bool = Fals
     )
 
 
+def flag_args(args: argparse.Namespace, *names: str) -> list[str]:
+    """Convert true argparse flags to command-line arguments."""
+    return [f"--{name.replace('_', '-')}" for name in names if getattr(args, name)]
+
+
+def optional_value_args(args: argparse.Namespace, *names: str) -> list[str]:
+    """Convert non-null argparse values to command-line arguments."""
+    result: list[str] = []
+    for name in names:
+        value = getattr(args, name)
+        if value is not None:
+            result.extend([f"--{name.replace('_', '-')}", str(value)])
+    return result
+
+
+def optional_list_args(args: argparse.Namespace, *names: str) -> list[str]:
+    """Convert non-empty argparse lists to command-line arguments."""
+    result: list[str] = []
+    for name in names:
+        values = getattr(args, name)
+        if values:
+            result.extend([f"--{name.replace('_', '-')}", *values])
+    return result
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Master workflow runner for the Depth Anything V2 reproduction data scripts."
@@ -247,7 +272,7 @@ def main() -> None:
     args = parse_args()
 
     if args.command == "bootstrap":
-        extra_args = ["--force-checkpoint"] if args.force_checkpoint else []
+        extra_args = flag_args(args, "force_checkpoint")
         run_python_script("bootstrap_depth_anything_v2.py", *extra_args)
         return
 
@@ -256,115 +281,88 @@ def main() -> None:
         return
 
     if args.command == "da2k":
-        workflow_args = ["--force"] if args.force else []
+        workflow_args = flag_args(args, "force")
         run_python_script("acquire_da2k.py", *workflow_args, use_venv=True)
         run_python_script("prepare_da2k.py", *workflow_args, use_venv=True)
         return
 
     if args.command == "benchmarks":
-        workflow_args: list[str] = []
-        if args.force:
-            workflow_args.append("--force")
-        if args.benchmarks:
-            workflow_args.extend(["--benchmarks", *args.benchmarks])
+        workflow_args = flag_args(args, "force")
+        workflow_args.extend(optional_list_args(args, "benchmarks"))
         run_python_script("acquire_remaining_benchmarks.py", *workflow_args)
         return
 
     if args.command == "setup":
-        extra_args = ["--force-checkpoint"] if args.force_checkpoint else []
+        extra_args = flag_args(args, "force_checkpoint")
         run_python_script("bootstrap_depth_anything_v2.py", *extra_args)
         run_python_script("run_depth_anything_v2_sanity_check.py")
         return
 
     if args.command == "evaluate-da2k":
-        workflow_args = []
-        if args.models:
-            workflow_args.extend(["--models", *args.models])
-        if args.limit is not None:
-            workflow_args.extend(["--limit", str(args.limit)])
-        if args.input_size is not None:
-            workflow_args.extend(["--input-size", str(args.input_size)])
-        if args.force:
-            workflow_args.append("--force")
+        workflow_args = optional_list_args(args, "models")
+        workflow_args.extend(optional_value_args(args, "limit", "input_size"))
+        workflow_args.extend(flag_args(args, "force"))
         run_python_script("evaluate_da2k.py", *workflow_args, use_venv=True)
         return
-    
+
     if args.command == "prepare-diode":
-        workflow_args = ["--force"] if args.force else []
+        workflow_args = flag_args(args, "force")
         run_python_script("prepare_diode.py", *workflow_args, use_venv=True)
         return
-    
+
     if args.command == "prepare-sintel":
-        workflow_args = ["--force"] if args.force else []
+        workflow_args = flag_args(args, "force")
         run_python_script("prepare_sintel.py", *workflow_args, use_venv=True)
         return
-    
+
     if args.command == "prepare-eth3d":
-        workflow_args = ["--force"] if args.force else []
+        workflow_args = flag_args(args, "force")
         run_python_script("prepare_eth3d.py", *workflow_args, use_venv=True)
         return
-    
+
     if args.command == "acquire-nyu":
-        workflow_args = ["--force"] if args.force else []
+        workflow_args = flag_args(args, "force")
         run_python_script("acquire_nyu.py", *workflow_args, use_venv=True)
         return
-    
+
     if args.command == "prepare-nyu":
-        workflow_args = ["--force"] if args.force else []
+        workflow_args = flag_args(args, "force")
         run_python_script("prepare_nyu.py", *workflow_args, use_venv=True)
         return
-    
+
     if args.command == "acquire-kitti":
-        workflow_args = []
-        if args.force:
-            workflow_args.append("--force")
-        if args.skip_annotated:
-            workflow_args.append("--skip-annotated")
-        if args.skip_drives:
-            workflow_args.append("--skip-drives")
+        workflow_args = flag_args(args, "force", "skip_annotated", "skip_drives")
         run_python_script("acquire_kitti.py", *workflow_args, use_venv=True)
         return
-    
+
     if args.command == "prepare-kitti":
-        workflow_args = ["--force"] if args.force else []
+        workflow_args = flag_args(args, "force")
         run_python_script("prepare_kitti.py", *workflow_args, use_venv=True)
         return
-    
+
     if args.command == "evaluate-pixelwise":
         workflow_args = ["--benchmark", args.benchmark, "--threads", str(args.threads)]
-        if args.models:
-            workflow_args += ["--models", *args.models]
-        if args.limit:
-            workflow_args += ["--limit", str(args.limit)]
-        if args.force:
-            workflow_args.append("--force")
+        workflow_args.extend(optional_list_args(args, "models"))
+        workflow_args.extend(optional_value_args(args, "limit"))
+        workflow_args.extend(flag_args(args, "force"))
         run_python_script("evaluate_pixelwise.py", *workflow_args, use_venv=True)
         return
-    
+
     if args.command == "build-pixelwise-report":
         workflow_args = ["--output", args.output] if args.output else []
         run_python_script("build_pixelwise_report.py", *workflow_args, use_venv=True)
         return
 
     if args.command == "metric-checkpoints":
-        workflow_args = []
-        if args.force:
-            workflow_args.append("--force")
-        if args.checkpoints:
-            workflow_args.extend(["--checkpoints", *args.checkpoints])
+        workflow_args = flag_args(args, "force")
+        workflow_args.extend(optional_list_args(args, "checkpoints"))
         run_python_script("acquire_metric_checkpoints.py", *workflow_args)
         return
 
     if args.command == "evaluate-metric":
-        workflow_args = []
-        if args.datasets:
-            workflow_args.extend(["--datasets", *args.datasets])
-        if args.limit is not None:
-            workflow_args.extend(["--limit", str(args.limit)])
-        if args.input_size is not None:
-            workflow_args.extend(["--input-size", str(args.input_size)])
-        if args.median_align:
-            workflow_args.append("--median-align")
+        workflow_args = optional_list_args(args, "datasets")
+        workflow_args.extend(optional_value_args(args, "limit", "input_size"))
+        workflow_args.extend(flag_args(args, "median_align"))
         run_python_script("evaluate_metric_depth.py", *workflow_args, use_venv=True)
         return
 
