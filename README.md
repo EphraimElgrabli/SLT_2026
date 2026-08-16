@@ -1,12 +1,20 @@
 # שחזור Depth Anything V2
 
-
 המאגר מרכז את עבודת השחזור למאמר **Depth Anything V2**. מטרת הפרויקט היא לבדוק עד כמה ניתן לשחזר את תוצאות המאמר בעזרת הקוד וה־checkpoints הציבוריים, בלי לשחזר את תהליך האימון הפרטי של החוקרים.
 
 העבודה מחולקת לשני צירי הערכה:
 
 - **DA-2K**: שחזור relative depth באמצעות זוגות נקודות מסומנות.
 - **Pixelwise / Metric depth benchmarks**: הערכה על KITTI, NYU Depth V2, Sintel, DIODE ו־ETH3D בעזרת מדדים כמו `AbsRel`, `RMSE` ו־`delta1`.
+
+## המאמר המקורי
+
+Yang, L., Kang, B., Huang, Z., Zhao, Z., Xu, X., Feng, J., & Zhao, H. (2024). Depth Anything V2. *Advances in Neural Information Processing Systems, 37*, 21875-21911.
+
+- המאמר המלא: [NeurIPS 2024 Proceedings](https://proceedings.neurips.cc/paper_files/paper/2024/hash/26cfdcd8fe6fd75cc53e92963a656c58-Abstract-Conference.html)
+- המימוש הרשמי: [DepthAnything/Depth-Anything-V2](https://github.com/DepthAnything/Depth-Anything-V2)
+
+קובץ ה-PDF של המאמר אינו נשמר במאגר; יש להוריד אותו מהקישור למעלה. תחת `paper/` נשמר סיכום עבודה בעברית בלבד.
 
 ## סטטוס נוכחי
 
@@ -34,7 +42,7 @@
 │   ├── models/          # checkpoints ציבוריים
 │   ├── outputs/         # תחזיות, מדדים ופלטי sanity check
 │   └── scripts/         # סקריפטי workflow מרכזיים
-├── paper/               # המאמר וחומרי מקור
+├── paper/               # סיכום המאמר וחומרי מקור
 ├── reports/             # דוחות שחזור ותוצרי הגשה
 ├── slides/              # מצגות התקדמות
 ├── tests/               # בדיקות מהירות
